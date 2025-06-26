@@ -1,0 +1,1549 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title data-i18n="appTitle">Crop Disease Classifier & Chatbot</title>
+    <script src="https://cdn.tailwindcss.com"></script>
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.0.0-beta3/css/all.min.css">
+    <style>
+        /* Import Google Font - Inter */
+        @import url('https://fonts.googleapis.com/css2?family=Inter:wght@300;400;500;600;700&display=swap');
+        
+        body {
+            font-family: 'Inter', sans-serif;
+            background-color: #f0fdf4; /* Light green background */
+            color: #1f2937; /* Dark gray text */
+        }
+        .app-container {
+            max-width: 1200px;
+            margin: 2rem auto;
+            padding: 1.5rem;
+        }
+        .header {
+            text-align: center;
+            padding: 2.5rem 0;
+            margin-bottom: 2.5rem;
+            background-color: #10b981; /* Vibrant green */
+            color: white;
+            border-radius: 1.5rem;
+            box-shadow: 0 10px 20px rgba(0, 0, 0, 0.15);
+        }
+        .card-container {
+            background-color: white;
+            border-radius: 1.5rem;
+            padding: 2rem;
+            box-shadow: 0 8px 16px rgba(0, 0, 0, 0.1);
+            margin-bottom: 2rem;
+            border: 1px solid #d1fae5; /* Light green border */
+        }
+        h2 {
+            color: #059669; /* Darker green headings */
+            margin-bottom: 1.5rem;
+            display: flex;
+            align-items: center;
+            gap: 0.75rem;
+            font-weight: 600;
+        }
+        h2 i {
+            font-size: 1.5em;
+        }
+        #preview-image {
+            max-width: 100%;
+            max-height: 400px; /* Increased max height */
+            margin: 1.5rem auto;
+            display: block;
+            border-radius: 0.75rem;
+            box-shadow: 0 4px 8px rgba(0, 0, 0, 0.1);
+            object-fit: contain; /* Ensure image fits well */
+        }
+        #result-box {
+            display: none;
+            margin-top: 2rem;
+            border-top: 3px solid #059669; /* Green separator */
+            padding-top: 1.5rem;
+        }
+        #result-box h3 {
+            color: #059669;
+            margin-bottom: 1rem;
+            font-weight: 600;
+        }
+        .alert-info-custom {
+            background-color: #d1fae5; /* Light green alert */
+            border-color: #a7f3d0;
+            color: #065f46;
+            border-radius: 0.75rem;
+            padding: 1rem;
+            margin-bottom: 1rem;
+        }
+        #treatment-advice {
+            margin-top: 1.5rem;
+            padding: 1.5rem;
+            border-left: 5px solid #059669;
+            background-color: #f0fdf4;
+            border-radius: 0.75rem;
+        }
+        #treatment-advice h4 {
+            color: #059669;
+            margin-bottom: 0.75rem;
+            font-weight: 600;
+        }
+        .chat-messages {
+            height: 400px; /* Increased height */
+            overflow-y: auto;
+            padding: 1rem;
+            background-color: #ecfdf5; /* Very light green */
+            border-radius: 0.75rem;
+            margin-bottom: 1.25rem;
+            border: 1px solid #d1fae5;
+            display: flex;
+            flex-direction: column;
+            gap: 0.75rem;
+        }
+        .message {
+            padding: 0.75rem 1rem;
+            border-radius: 0.5rem;
+            max-width: 80%;
+            display: flex;
+            align-items: center;
+            gap: 0.5rem;
+        }
+        .user-message {
+            background-color: #e0f2fe; /* Light blue */
+            color: #0c4a6e; /* Darker blue text */
+            margin-left: auto; /* Align to right */
+            border-top-right-radius: 0;
+        }
+        .bot-message {
+            background-color: #f3f4f6; /* Light gray */
+            color: #374151; /* Dark gray */
+            margin-right: auto; /* Align to left */
+            border-top-left-radius: 0;
+        }
+        .form-control-custom {
+            border-radius: 0.75rem;
+            padding: 0.75rem 1rem;
+            border: 1px solid #d1d5db;
+            width: 100%;
+        }
+        .btn-primary-custom {
+            background-color: #10b981;
+            color: white;
+            border-radius: 0.75rem;
+            padding: 0.75rem 1.25rem;
+            font-weight: 600;
+            box-shadow: 0 2px 4px rgba(0, 0, 0, 0.1);
+            transition: background-color 0.2s ease-in-out;
+            display: flex;
+            align-items: center;
+            gap: 0.5rem;
+        }
+        .btn-primary-custom:hover {
+            background-color: #059669;
+        }
+        .btn-secondary-custom {
+            background-color: #6b7280;
+            color: white;
+            border-radius: 0.75rem;
+            padding: 0.75rem 1.25rem;
+            font-weight: 600;
+            box-shadow: 0 2px 4px rgba(0, 0, 0, 0.1);
+            transition: background-color 0.2s ease-in-out;
+            display: flex;
+            align-items: center;
+            gap: 0.5rem;
+        }
+        .btn-secondary-custom:hover {
+            background-color: #4b5563;
+        }
+        .btn-icon-custom {
+            padding: 0.75rem;
+            border-radius: 0.75rem;
+            font-size: 1.25rem;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            transition: background-color 0.2s ease-in-out;
+        }
+        .btn-mic {
+            background-color: #ef4444; /* Red for mic */
+            color: white;
+        }
+        .btn-mic:hover {
+            background-color: #dc2626;
+        }
+        .btn-mic.recording {
+            background-color: #b91c1c;
+            animation: pulse 1s infinite;
+        }
+        @keyframes pulse {
+            0% { box-shadow: 0 0 0 0 rgba(239, 68, 68, 0.7); }
+            70% { box-shadow: 0 0 0 10px rgba(239, 68, 68, 0); }
+            100% { box-shadow: 0 0 0 0 rgba(239, 68, 68, 0); }
+        }
+
+        .loader {
+            border: 5px solid #f3f3f3;
+            border-top: 5px solid #059669;
+            border-radius: 50%;
+            width: 50px;
+            height: 50px;
+            animation: spin 2s linear infinite;
+            margin: 1.5rem auto;
+            display: none;
+        }
+        @keyframes spin {
+            0% { transform: rotate(0deg); }
+            100% { transform: rotate(360deg); }
+        }
+
+        /* Accordion Styles */
+        .accordion-section {
+            margin-bottom: 1rem;
+            border: 1px solid #d1fae5;
+            border-radius: 0.75rem;
+            overflow: hidden;
+        }
+        .accordion-toggle {
+            background-color: #ecfdf5;
+            color: #059669;
+            padding: 1rem;
+            width: 100%;
+            border: none;
+            text-align: left;
+            cursor: pointer;
+            font-weight: 600;
+            display: flex;
+            align-items: center;
+            gap: 0.75rem;
+            border-bottom: 1px solid #d1fae5;
+            transition: background-color 0.2s ease-in-out;
+        }
+        .accordion-toggle:hover {
+            background-color: #d1fae5;
+        }
+        .accordion-content {
+            padding: 1rem;
+            background-color: white;
+            display: none;
+        }
+        .accordion-content.active {
+            display: block;
+        }
+        .accordion-content ul {
+            list-style-type: disc;
+            margin-left: 1.25rem;
+            padding-left: 0;
+        }
+        .accordion-content .sub-section {
+            margin-bottom: 1rem;
+            padding-left: 0.75rem;
+            border-left: 3px solid #059669;
+        }
+        .accordion-content .sub-section h5 {
+            color: #059669;
+            margin-top: 0;
+            margin-bottom: 0.5rem;
+            font-weight: 600;
+        }
+        .language-selector-container {
+            display: flex;
+            justify-content: flex-end;
+            margin-bottom: 1.5rem;
+        }
+        #language-select {
+            border-radius: 0.75rem;
+            padding: 0.75rem 1rem;
+            border: 1px solid #d1d5db;
+            background-color: white;
+            color: #374151;
+            font-weight: 500;
+            cursor: pointer;
+        }
+        .stop-button {
+            background-color: #ef4444; /* Red for stop */
+            color: white;
+            display: none; /* Hidden by default */
+        }
+        .stop-button:hover {
+            background-color: #dc2626;
+        }
+    </style>
+</head>
+<body class="min-h-screen">
+    <div class="app-container">
+        <div class="header">
+            <h1 class="text-4xl font-bold mb-2 flex items-center justify-center gap-3">
+                <i class="fas fa-leaf"></i> <span data-i18n="headerTitle">Crop Disease Classifier & Chatbot</span>
+            </h1>
+            <p class="text-lg" data-i18n="headerSubtitle">Upload an image of a crop leaf to identify diseases and get treatment advice</p>
+        </div>
+
+        <div class="language-selector-container">
+            <select id="language-select" class="form-select">
+                <option value="en-US">English</option>
+                <option value="hi-IN">हिन्दी (Hindi)</option>
+                <option value="te-IN">తెలుగు (Telugu)</option>
+                <option value="bn-IN">বাংলা (Bengali)</option>
+                <option value="mr-IN">मराठी (Marathi)</option>
+                <option value="ta-IN">தமிழ் (Tamil)</option>
+                <option value="gu-IN">ગુજરાતી (Gujarati)</option>
+                <option value="kn-IN">ಕನ್ನಡ (Kannada)</option>
+                <option value="ml-IN">മലയാളം (Malayalam)</option>
+                <option value="pa-IN">ਪੰਜਾਬੀ (Punjabi)</option>
+            </select>
+        </div>
+
+        <div class="grid grid-cols-1 lg:grid-cols-2 gap-8">
+            <div class="card-container">
+                <h2 class="text-2xl">
+                    <i class="fas fa-upload"></i> <span data-i18n="uploadSectionTitle">Upload Crop Image</span>
+                </h2>
+                <form id="upload-form" class="space-y-4">
+                    <div>
+                        <input class="form-control-custom block w-full text-gray-900 border border-gray-300 rounded-lg cursor-pointer bg-gray-50 focus:outline-none" type="file" id="image-upload" accept="image/*">
+                    </div>
+                    <div class="text-center">
+                        <button type="submit" class="btn-primary-custom">
+                            <i class="fas fa-search"></i> <span data-i18n="analyzeButton">Analyze Disease</span>
+                        </button>
+                    </div>
+                </form>
+                <div class="text-center">
+                    <img id="preview-image" src="" alt="Image Preview" class="hidden">
+                    <div class="loader" id="upload-loader"></div>
+                </div>
+
+                <div id="result-box">
+                    <h3 class="text-xl">
+                        <i class="fas fa-check-circle"></i> <span data-i18n="analysisResultTitle">Analysis Result</span>
+                    </h3>
+                    <div class="alert-info-custom">
+                        <p class="font-medium"><strong data-i18n="diseaseLabel">Disease:</strong> <span id="disease-name">-</span></p>
+                        <p class="font-medium"><strong data-i18n="confidenceLabel">Confidence:</strong> <span id="confidence-score">-</span>%</p>
+                    </div>
+                    <div id="treatment-advice">
+                        <h4 class="text-lg flex items-center gap-2">
+                            <i class="fas fa-prescription"></i> <span data-i18n="treatmentAdviceTitle">Treatment Advice</span>
+                            <button class="btn-icon-custom bg-gray-200 text-gray-700 hover:bg-gray-300 ml-auto speak-button" id="speak-treatment-advice" title="Listen to advice">
+                                <i class="fas fa-volume-up"></i>
+                            </button>
+                            <button class="btn-icon-custom stop-button" id="stop-treatment-advice" title="Stop Speaking">
+                                <i class="fas fa-stop"></i>
+                            </button>
+                        </h4>
+                        <p id="advice-text" data-i18n="defaultAdviceText">Upload an image to get treatment advice.</p>
+                    </div>
+                    <div id="disease-information" class="mt-6">
+                        <h4 class="text-lg flex items-center gap-2">
+                            <i class="fas fa-info-circle"></i> <span data-i18n="diseaseInfoTitle">Disease Information</span>
+                        </h4>
+                        <div id="disease-info-container">
+                            </div>
+                    </div>
+                </div>
+            </div>
+
+            <div class="card-container">
+                <h2 class="text-2xl">
+                    <i class="fas fa-robot"></i> <span data-i18n="chatbotTitle">Crop Care Chatbot</span>
+                </h2>
+                <p class="text-gray-600 mb-4" data-i18n="chatbotSubtitle">Ask questions about Crop care, diseases, or gardening tips.</p>
+
+                <div class="chat-messages" id="chat-messages">
+                    <div class="message bot-message">
+                        <span data-i18n="initialBotMessage">Hello! I'm your Crop care assistant. How can I help you today?</span>
+                        <button class="btn-icon-custom bg-gray-200 text-gray-700 hover:bg-gray-300 listen-message-btn speak-button" data-message-key="initialBotMessage" title="Listen">
+                            <i class="fas fa-volume-up"></i>
+                        </button>
+                        <button class="btn-icon-custom stop-button listen-message-stop-btn" title="Stop Speaking">
+                            <i class="fas fa-stop"></i>
+                        </button>
+                    </div>
+                </div>
+
+                <div class="flex items-center gap-3">
+                    <input type="text" id="chat-input" class="form-control-custom flex-grow" data-i18n-placeholder="chatPlaceholder" placeholder="Ask about Crop care...">
+                    <button class="btn-icon-custom btn-mic" type="button" id="mic-button" title="Speak">
+                        <i class="fas fa-microphone"></i>
+                    </button>
+                    <button class="btn-primary-custom" type="button" id="send-button">
+                        <i class="fas fa-paper-plane"></i> <span data-i18n="sendButton">Send</span>
+                    </button>
+                </div>
+                <div class="loader" id="chat-loader"></div>
+            </div>
+        </div>
+    </div>
+
+    <script>
+        document.addEventListener('DOMContentLoaded', function() {
+            // DOM Elements
+            const uploadForm = document.getElementById('upload-form');
+            const imageUpload = document.getElementById('image-upload');
+            const previewImage = document.getElementById('preview-image');
+            const resultBox = document.getElementById('result-box');
+            const diseaseNameSpan = document.getElementById('disease-name');
+            const confidenceScoreSpan = document.getElementById('confidence-score');
+            const adviceText = document.getElementById('advice-text');
+            const uploadLoader = document.getElementById('upload-loader');
+            const chatMessages = document.getElementById('chat-messages');
+            const chatInput = document.getElementById('chat-input');
+            const sendButton = document.getElementById('send-button');
+            const chatLoader = document.getElementById('chat-loader');
+            const treatmentAdviceDiv = document.getElementById('treatment-advice');
+            const diseaseInformationDiv = document.getElementById('disease-information');
+            const diseaseInfoContainer = document.getElementById('disease-info-container');
+            const micButton = document.getElementById('mic-button');
+            const speakTreatmentAdviceButton = document.getElementById('speak-treatment-advice');
+            const stopTreatmentAdviceButton = document.getElementById('stop-treatment-advice'); // New Stop button for advice
+            const languageSelect = document.getElementById('language-select');
+
+            // Global variable to hold the current audio object
+            let currentAudio = null;
+let currentSpeakingButton = null;
+let isSpeaking = false; // Prevent race conditions
+
+function stopSpeaking() {
+    if (currentAudio) {
+        currentAudio.pause();
+        currentAudio.currentTime = 0;
+        currentAudio.onended = null; // Remove event listener
+        currentAudio = null;
+    }
+    isSpeaking = false;
+    // Reset all speak/stop buttons
+    document.querySelectorAll('.speak-button').forEach(btn => {
+        btn.innerHTML = '<i class="fas fa-volume-up"></i>';
+        btn.title = translations[currentLanguage].listenButton;
+    });
+    document.querySelectorAll('.stop-button').forEach(btn => {
+        btn.style.display = 'none';
+    });
+    currentSpeakingButton = null;
+}
+
+async function speakText(text, lang_code_full = 'en-US', speakBtn = null, stopBtn = null) {
+    // Prevent overlapping calls
+    if (isSpeaking) {
+        stopSpeaking();
+    }
+    isSpeaking = true;
+
+    stopSpeaking();
+
+    currentSpeakingButton = speakBtn || speakTreatmentAdviceButton;
+    const associatedStopButton = stopBtn || stopTreatmentAdviceButton;
+
+    currentSpeakingButton.title = "Speaking...";
+    currentSpeakingButton.innerHTML = '<i class="fas fa-volume-up animate-pulse"></i>';
+    if (associatedStopButton) {
+        associatedStopButton.style.display = 'inline-flex';
+    }
+
+    try {
+        const response = await fetch(`${FLASK_API_URL}/tts_process`, {
+            method: 'POST',
+            headers: { 'Content-Type': 'application/json' },
+            body: JSON.stringify({ text: text, language_code: lang_code_full })
+        });
+
+        const data = await response.json();
+        if (data.error) {
+            throw new Error(data.error);
+        }
+
+        const audio = new Audio(`data:audio/mpeg;base64,${data.audio_content}`);
+        currentAudio = audio;
+
+        audio.onended = () => {
+            stopSpeaking();
+        };
+
+        // Prevent double play if user spams the button
+        await audio.play().catch(err => {
+            alert('Audio playback failed: ' + err.message);
+            stopSpeaking();
+        });
+
+    } catch (error) {
+        console.error('TTS Error:', error);
+        alert('Error playing audio. Please try again.');
+        stopSpeaking();
+    } finally {
+        isSpeaking = false;
+    }
+}
+
+// **MODIFICATION START:** Ensure this matches your Flask app's address
+            const FLASK_API_URL = 'http://127.0.0.1:5000'; // Replace with your Flask server IP and Port
+            // **MODIFICATION END**
+
+            let currentDisease = ""; // Stores the English name of the detected disease
+            let currentLanguage = languageSelect.value; // e.g., 'en-US', 'hi-IN'
+
+            // --- UI Translation Data ---
+            const translations = {
+                'en-US': {
+                    appTitle: 'Crop Disease Classifier & Chatbot',
+                    headerTitle: 'Crop Disease Classifier & Chatbot',
+                    headerSubtitle: 'Upload an image of a crop leaf to identify diseases and get treatment advice',
+                    uploadSectionTitle: 'Upload Crop Image',
+                    analyzeButton: 'Analyze Disease',
+                    analysisResultTitle: 'Analysis Result',
+                    diseaseLabel: 'Disease:',
+                    confidenceLabel: 'Confidence:',
+                    defaultAdviceText: 'Upload an image to get treatment advice.',
+                    treatmentAdviceTitle: 'Treatment Advice',
+                    diseaseInfoTitle: 'Disease Information',
+                    chatbotTitle: 'Crop Care Chatbot',
+                    chatbotSubtitle: 'Ask questions about Crop care, diseases, or gardening tips.',
+                    initialBotMessage: 'Hello! I\'m your crop care assistant. How can I help you today?',
+                    chatPlaceholder: 'Ask about crop care...',
+                    sendButton: 'Send',
+                    micButtonSpeak: 'Speak',
+                    micButtonStop: 'Stop Speaking',
+                    micListening: 'Listening...',
+                    micError: 'Error listening. Try typing or clicking mic again.',
+                    alertImageRequired: 'Please select an image to upload',
+                    alertAnalysisError: 'Error analyzing image: ',
+                    alertFetchInfoError: 'Error fetching disease information: ',
+                    alertChatbotError: 'Connection error. Please try again.',
+                    infoCause: 'Cause',
+                    infoSymptoms: 'Symptoms',
+                    infoConditions: 'Conditions Favoring Development',
+                    infoManagementStrategies: 'Management Strategies',
+                    infoCulturalControl: 'Cultural Control',
+                    infoChemicalControl: 'Chemical Control',
+                    infoBiologicalControl: 'Biological Control',
+                    infoLongTermPrevention: 'Long-Term Prevention',
+                    noTreatmentAdvice: 'No treatment advice available.',
+                    listenButton: 'Listen',
+                    stopButton: 'Stop',
+                },
+                'hi-IN': {
+                    appTitle: 'फसल रोग वर्गीकरण और चैटबॉट',
+                    headerTitle: 'फसल रोग वर्गीकरण और चैटबॉट',
+                    headerSubtitle: 'फसल के पत्ते की छवि अपलोड करें ताकि रोगों की पहचान हो सके और उपचार सलाह मिल सके',
+                    uploadSectionTitle: 'फसल की छवि अपलोड करें',
+                    analyzeButton: 'रोग का विश्लेषण करें',
+                    analysisResultTitle: 'विश्लेषण परिणाम',
+                    diseaseLabel: 'रोग:',
+                    confidenceLabel: 'आत्मविश्वास:',
+                    defaultAdviceText: 'उपचार सलाह प्राप्त करने के लिए एक छवि अपलोड करें।',
+                    treatmentAdviceTitle: 'उपचार सलाह',
+                    diseaseInfoTitle: 'रोग की जानकारी',
+                    chatbotTitle: 'फसल देखभाल चैटबॉट',
+                    chatbotSubtitle: 'फसल की देखभाल, बीमारियों या बागवानी युक्तियों के बारे में प्रश्न पूछें।',
+                    initialBotMessage: 'नमस्ते! मैं आपका फसल देखभाल सहायक हूँ। मैं आज आपकी कैसे मदद कर सकता हूँ?',
+                    chatPlaceholder: 'फसल की देखभाल के बारे में पूछें...',
+                    sendButton: 'भेजें',
+                    micButtonSpeak: 'बोलें',
+                    micButtonStop: 'बोलना बंद करें',
+                    micListening: 'सुन रहा है...',
+                    micError: 'सुनने में त्रुटि। टाइप करने या माइक पर फिर से क्लिक करने का प्रयास करें।',
+                    alertImageRequired: 'कृपया अपलोड करने के लिए एक छवि का चयन करें',
+                    alertAnalysisError: 'छवि का विश्लेषण करने में त्रुटि: ',
+                    alertFetchInfoError: 'रोग की जानकारी लाने में त्रुटि: ',
+                    alertChatbotError: 'कनेक्शन त्रुटि। कृपया पुनः प्रयास करें।',
+                    infoCause: 'कारण',
+                    infoSymptoms: 'लक्षण',
+                    infoConditions: 'विकास के लिए अनुकूल परिस्थितियाँ',
+                    infoManagementStrategies: 'प्रबंधन रणनीतियाँ',
+                    infoCulturalControl: 'सांस्कृतिक नियंत्रण',
+                    infoChemicalControl: 'रासायनिक नियंत्रण',
+                    infoBiologicalControl: 'जैविक नियंत्रण',
+                    infoLongTermPrevention: 'दीर्घकालिक रोकथाम',
+                    noTreatmentAdvice: 'कोई उपचार सलाह उपलब्ध नहीं है।',
+                    listenButton: 'सुनो',
+                    stopButton: 'रुको',
+                },
+                'te-IN': {
+                    appTitle: 'పంట వ్యాధి వర్గీకరణ మరియు చాట్‌బాట్',
+                    headerTitle: 'పంట వ్యాధి వర్గీకరణ మరియు చాట్‌బాట్',
+                    headerSubtitle: 'వ్యాధులను గుర్తించడానికి మరియు చికిత్స సలహా పొందడానికి పంట ఆకు చిత్రాన్ని అప్‌లోడ్ చేయండి',
+                    uploadSectionTitle: 'పంట చిత్రాన్ని అప్‌లోడ్ చేయండి',
+                    analyzeButton: 'వ్యాధిని విశ్లేషించండి',
+                    analysisResultTitle: 'విశ్లేషణ ఫలితం',
+                    diseaseLabel: 'వ్యాధి:',
+                    confidenceLabel: 'విశ్వాసం:',
+                    defaultAdviceText: 'చికిత్స సలహా పొందడానికి చిత్రాన్ని అప్‌లోడ్ చేయండి.',
+                    treatmentAdviceTitle: 'చికిత్స సలహా',
+                    diseaseInfoTitle: 'వ్యాధి సమాచారం',
+                    chatbotTitle: 'పంట సంరక్షణ చాట్‌బాట్',
+                    chatbotSubtitle: 'పంట సంరక్షణ, వ్యాధులు లేదా తోటపని చిట్కాల గురించి ప్రశ్నలు అడగండి.',
+                    initialBotMessage: 'నమస్కారం! నేను మీ పంట సంరక్షణ సహాయకుడిని. ఈరోజు నేను మీకు ఎలా సహాయం చేయగలను?',
+                    chatPlaceholder: 'పంట సంరక్షణ గురించి అడగండి...',
+                    sendButton: 'పంపండి',
+                    micButtonSpeak: 'మాట్లాడండి',
+                    micButtonStop: 'మాట్లాడటం ఆపండి',
+                    micListening: 'వినబడుతోంది...',
+                    micError: 'వినడంలో లోపం. టైప్ చేయడానికి లేదా మైక్‌పై మళ్లీ క్లిక్ చేయడానికి ప్రయత్నించండి.',
+                    alertImageRequired: 'దయచేసి అప్‌లోడ్ చేయడానికి చిత్రాన్ని ఎంచుకోండి',
+                    alertAnalysisError: 'చిత్రాన్ని విశ్లేషించడంలో లోపం: ',
+                    alertFetchInfoError: 'వ్యాధి సమాచారాన్ని పొందడంలో లోపం: ',
+                    alertChatbotError: 'కనెక్షన్ లోపం. దయచేచేసి మళ్ళీ ప్రయత్నించండి.',
+                    infoCause: 'కారణం',
+                    infoSymptoms: 'లక్షణాలు',
+                    infoConditions: 'అభివృద్ధికి అనుకూల పరిస్థితులు',
+                    infoManagementStrategies: 'నిర్వహణ వ్యూహాలు',
+                    infoCulturalControl: 'సాంస్కృతిక నియంత్రణ',
+                    infoChemicalControl: 'రసాయన నియంత్రణ',
+                    infoBiologicalControl: 'జీవ నియంత్రణ',
+                    infoLongTermPrevention: 'దీర్ఘకాలిక నివారణ',
+                    noTreatmentAdvice: 'చికిత్స సలహా అందుబాటులో లేదు.',
+                    listenButton: 'వినండి',
+                    stopButton: 'ఆపు',
+                },
+                'bn-IN': {
+                    appTitle: 'ফসল রোগ শ্রেণীবিন্যাসকারী ও চ্যাটবট',
+                    headerTitle: 'ফসল রোগ শ্রেণীবিন্যাসকারী ও চ্যাটবট',
+                    headerSubtitle: 'রোগ সনাক্ত করতে এবং চিকিৎসার পরামর্শ পেতে একটি ফসল পাতার ছবি আপলোড করুন',
+                    uploadSectionTitle: 'ফসল ছবি আপলোড করুন',
+                    analyzeButton: 'রোগ বিশ্লেষণ করুন',
+                    analysisResultTitle: 'বিশ্লেষণ ফলাফল',
+                    diseaseLabel: 'রোগ:',
+                    confidenceLabel: 'আত্মবিশ্বাস:',
+                    defaultAdviceText: 'চিকিৎসার পরামর্শ পেতে একটি ছবি আপলোড করুন।',
+                    treatmentAdviceTitle: 'চিকিৎসার পরামর্শ',
+                    diseaseInfoTitle: 'রোগের তথ্য',
+                    chatbotTitle: 'ফসল যত্ন চ্যাটবট',
+                    chatbotSubtitle: 'ফসল যত্ন, রোগ বা বাগান করার টিপস সম্পর্কে প্রশ্ন জিজ্ঞাসা করুন।',
+                    initialBotMessage: 'হ্যালো! আমি আপনার ফসল যত্ন সহকারী। আমি আজ আপনাকে কিভাবে সাহায্য করতে পারি?',
+                    chatPlaceholder: 'ফসল যত্ন সম্পর্কে জিজ্ঞাসা করুন...',
+                    sendButton: 'পাঠান',
+                    micButtonSpeak: 'কথা বলুন',
+                    micButtonStop: 'কথা বলা বন্ধ করুন',
+                    micListening: 'শুনছি...',
+                    micError: 'শুনতে সমস্যা হয়েছে। টাইপ করার চেষ্টা করুন অথবা মাইকে আবার ক্লিক করুন।',
+                    alertImageRequired: 'অনুগ্রহ করে আপলোড করার জন্য একটি ছবি নির্বাচন করুন',
+                    alertAnalysisError: 'ছবি বিশ্লেষণ করতে ত্রুটি: ',
+                    alertFetchInfoError: 'রোগের তথ্য আনতে ত্রুটি: ',
+                    alertChatbotError: 'সংযোগ ত্রুটি। অনুগ্রহ করে আবার চেষ্টা করুন।',
+                    infoCause: 'কারণ',
+                    infoSymptoms: 'লক্ষণ',
+                    infoConditions: 'উন্নয়নের অনুকূল শর্ত',
+                    infoManagementStrategies: 'ব্যবস্থাপনা কৌশল',
+                    infoCulturalControl: 'সাংস্কৃতিক নিয়ন্ত্রণ',
+                    infoChemicalControl: 'রাসায়নিক নিয়ন্ত্রণ',
+                    infoBiologicalControl: 'জৈবিক নিয়ন্ত্রণ',
+                    infoLongTermPrevention: 'দীর্ঘমেয়াদী প্রতিরোধ',
+                    noTreatmentAdvice: 'কোন চিকিৎসার পরামর্শ উপলব্ধ নেই।',
+                    listenButton: 'শুনুন',
+                    stopButton: 'বন্ধ করুন',
+                },
+                'mr-IN': {
+                    appTitle: 'कापणी रोग वर्गीकरण आणि चॅटबॉट',
+                    headerTitle: 'कापणी रोग वर्गीकरण आणि चॅटबॉट',
+                    headerSubtitle: 'रोगांची ओळख पटवण्यासाठी आणि उपचाराचा सल्ला घेण्यासाठी कापणींच्या पानाचे चित्र अपलोड करा',
+                    uploadSectionTitle: 'कापणी चित्र अपलोड करा',
+                    analyzeButton: 'रोगाचे विश्लेषण करा',
+                    analysisResultTitle: 'विश्लेषण निकाल',
+                    diseaseLabel: 'रोग:',
+                    confidenceLabel: 'आत्मविश्वास:',
+                    defaultAdviceText: 'उपचाराचा सल्ला मिळवण्यासाठी एक चित्र अपलोड करा.',
+                    treatmentAdviceTitle: 'उपचार सल्ला',
+                    diseaseInfoTitle: 'रोगाची माहिती',
+                    chatbotTitle: 'कापणी काळजी चॅटबॉट',
+                    chatbotSubtitle: 'कापणी काळजी, रोग किंवा बागकाम टिप्सबद्दल प्रश्न विचारा.',
+                    initialBotMessage: 'नमस्कार! मी तुमचा कापणी काळजी सहायक आहे. मी आज तुम्हाला कशी मदत करू शकेन?',
+                    chatPlaceholder: 'कापणी काळजीबद्दल विचारा...',
+                    sendButton: 'पाठवा',
+                    micButtonSpeak: 'बोला',
+                    micButtonStop: 'बोलणे थांबवा',
+                    micListening: 'ऐकत आहे...',
+                    micError: 'ऐकण्यात त्रुटी. टाइप करण्याचा किंवा माइकवर पुन्हा क्लिक करण्याचा प्रयत्न करा.',
+                    alertImageRequired: 'कृपया अपलोड करण्यासाठी एक प्रतिमा निवडा',
+                    alertAnalysisError: 'प्रतिमा विश्लेषण करताना त्रुटी: ',
+                    alertFetchInfoError: 'रोगाची माहिती मिळवताना त्रुटी: ',
+                    alertChatbotError: 'कनेक्शन त्रुटी. कृपया पुन्हा प्रयत्न करा.',
+                    infoCause: 'कारण',
+                    infoSymptoms: 'लक्षणे',
+                    infoConditions: 'विकासासाठी अनुकूल परिस्थिती',
+                    infoManagementStrategies: 'व्यवस्थापन धोरणे',
+                    infoCulturalControl: 'सांस्कृतिक नियंत्रण',
+                    infoChemicalControl: 'रासायनिक नियंत्रण',
+                    infoBiologicalControl: 'जैविक नियंत्रण',
+                    infoLongTermPrevention: 'दीर्घकाळ प्रतिबंध',
+                    noTreatmentAdvice: 'कोणताही उपचार सल्ला उपलब्ध नाही.',
+                    listenButton: 'ऐका',
+                    stopButton: 'थांबा',
+                },
+                'ta-IN': {
+                    appTitle: 'தாவர நோய் வகைப்படுத்தி மற்றும் சாட்பாட்',
+                    headerTitle: 'தாவர நோய் வகைப்படுத்தி மற்றும் சாட்பாட்',
+                    headerSubtitle: 'தாவர இலை படத்தைப் பதிவேற்றி நோய்களைக் கண்டறிந்து சிகிச்சை ஆலோசனை பெறுங்கள்',
+                    uploadSectionTitle: 'தாவரப் படத்தைப் பதிவேற்றுங்கள்',
+                    analyzeButton: 'நோயை பகுப்பாய்வு செய்யுங்கள்',
+                    analysisResultTitle: 'பகுப்பாய்வு முடிவு',
+                    diseaseLabel: 'நோய்:',
+                    confidenceLabel: 'நம்பிக்கை:',
+                    defaultAdviceText: 'சிகிச்சை ஆலோசனை பெற ஒரு படத்தைப் பதிவேற்றுங்கள்.',
+                    treatmentAdviceTitle: 'சிகிச்சை ஆலோசனை',
+                    diseaseInfoTitle: 'நோய் தகவல்',
+                    chatbotTitle: 'தாவரப் பராமரிப்பு சாட்பாட்',
+                    chatbotSubtitle: 'தாவரப் பராமரிப்பு, நோய்கள் அல்லது தோட்டக்கலை குறிப்புகள் பற்றி கேள்விகள் கேளுங்கள்.',
+                    initialBotMessage: 'வணக்கம்! நான் உங்கள் தாவரப் பராமரிப்பு உதவியாளர். இன்று நான் உங்களுக்கு எப்படி உதவ முடியும்?',
+                    chatPlaceholder: 'தாவரப் பராமரிப்பு பற்றி கேளுங்கள்...',
+                    sendButton: 'அனுப்பு',
+                    micButtonSpeak: 'பேசுங்கள்',
+                    micButtonStop: 'பேசுவதை நிறுத்துங்கள்',
+                    micListening: 'கேட்கிறது...',
+                    micError: 'கேட்பதில் பிழை. தட்டச்சு செய்ய அல்லது மைக் பொத்தானை மீண்டும் கிளிக் செய்ய முயற்சிக்கவும்.',
+                    alertImageRequired: 'பதிவேற்ற ஒரு படத்தைத் தேர்ந்தெடுக்கவும்',
+                    alertAnalysisError: 'படத்தை பகுப்பாய்வு செய்வதில் பிழை: ',
+                    alertFetchInfoError: 'நோய் தகவலைப் பெறுவதில் பிழை: ',
+                    alertChatbotError: 'இணைப்பு பிழை. மீண்டும் முயற்சிக்கவும்.',
+                    infoCause: 'காரணம்',
+                    infoSymptoms: 'அறிகுறிகள்',
+                    infoConditions: 'வளர்ச்சிக்கு சாதகமான நிலைமைகள்',
+                    infoManagementStrategies: 'மேலாண்மை உத்திகள்',
+                    infoCulturalControl: 'பண்பாட்டு கட்டுப்பாடு',
+                    infoChemicalControl: 'இரசாயன கட்டுப்பாடு',
+                    infoBiologicalControl: 'உயிரியல் கட்டுப்பாடு',
+                    infoLongTermPrevention: 'நீண்ட கால தடுப்பு',
+                    noTreatmentAdvice: 'சிகிச்சை ஆலோசனை எதுவும் இல்லை.',
+                    listenButton: 'கேட்க',
+                    stopButton: 'நிறுத்து',
+                },
+                'gu-IN': {
+                    appTitle: 'છોડ રોગ વર્ગીકરણ અને ચેટબોટ',
+                    headerTitle: 'છોડ રોગ વર્ગીકરણ અને ચેટબોટ',
+                    headerSubtitle: 'રોગોને ઓળખવા અને સારવારની સલાહ મેળવવા માટે છોડના પાંદડાની છબી અપલોડ કરો',
+                    uploadSectionTitle: 'છોડની છબી અપલોડ કરો',
+                    analyzeButton: 'રોગનું વિશ્લેષણ કરો',
+                    analysisResultTitle: 'વિશ્લેષણ પરિણામ',
+                    diseaseLabel: 'રોગ:',
+                    confidenceLabel: 'આત્મવિશ્વાસ:',
+                    defaultAdviceText: 'સારવારની સલાહ મેળવવા માટે એક છબી અપલોડ કરો.',
+                    treatmentAdviceTitle: 'સારવારની સલાહ',
+                    diseaseInfoTitle: 'રોગની માહિતી',
+                    chatbotTitle: 'છોડની સંભાળ ચેટબોટ',
+                    chatbotSubtitle: 'છોડની સંભાળ, રોગો અથવા બાગકામની ટીપ્સ વિશે પ્રશ્નો પૂછો.',
+                    initialBotMessage: 'નમસ્તે! હું તમારો છોડની સંભાળ સહાયક છું. આજે હું તમને કેવી રીતે મદદ કરી શકું?',
+                    chatPlaceholder: 'છોડની સંભાળ વિશે પૂછો...',
+                    sendButton: 'મોકલો',
+                    micButtonSpeak: 'બોલો',
+                    micButtonStop: 'બોલવાનું બંધ કરો',
+                    micListening: 'સાંભળી રહ્યું છે...',
+                    micError: 'સાંભળવામાં ભૂલ. ટાઇપ કરવાનો અથવા માઇક પર ફરીથી ક્લિક કરવાનો પ્રયાસ કરો.',
+                    alertImageRequired: 'કૃપા કરીને અપલોડ કરવા માટે એક છબી પસંદ કરો',
+                    alertAnalysisError: 'છબીનું વિશ્લેષણ કરવામાં ભૂલ: ',
+                    alertFetchInfoError: 'રોગની માહિતી મેળવવામાં ભૂલ: ',
+                    alertChatbotError: 'કનેક્શન ભૂલ. કૃપા કરીને ફરી પ્રયાસ કરો.',
+                    infoCause: 'કારણ',
+                    infoSymptoms: 'લક્ષણો',
+                    infoConditions: 'વિકાસ માટે અનુકૂળ પરિસ્થિતિઓ',
+                    infoManagementStrategies: 'વ્યવસ્થાપન વ્યૂહરચના',
+                    infoCulturalControl: 'સાંસ્કૃતિક નિયંત્રણ',
+                    infoChemicalControl: 'રસાયણિક નિયંત્રણ',
+                    infoBiologicalControl: 'જૈવિક નિયંત્રણ',
+                    infoLongTermPrevention: 'લાંબા ગાળાના નિવારણ',
+                    noTreatmentAdvice: 'કોઈ સારવાર સલાહ ઉપલબ્ધ નથી.',
+                    listenButton: 'સાંભળો',
+                    stopButton: 'રોકો',
+                },
+                'kn-IN': {
+                    appTitle: 'ಸಸ್ಯ ರೋಗ ವರ್ಗೀಕರಣ ಮತ್ತು ಚಾಟ್‌ಬಾಟ್',
+                    headerTitle: 'ಸಸ್ಯ ರೋಗ ವರ್ಗೀಕರಣ ಮತ್ತು ಚಾಟ್‌ಬಾಟ್',
+                    headerSubtitle: 'ರೋಗಗಳನ್ನು ಗುರುತಿಸಲು ಮತ್ತು ಚಿಕಿತ್ಸೆಯ ಸಲಹೆ ಪಡೆಯಲು ಸಸ್ಯದ ಎಲೆಯ ಚಿತ್ರವನ್ನು ಅಪ್‌ಲೋಡ್ ಮಾಡಿ',
+                    uploadSectionTitle: 'ಸಸ್ಯ ಚಿತ್ರವನ್ನು ಅಪ್‌ಲೋಡ್ ಮಾಡಿ',
+                    analyzeButton: 'ರೋಗ ವಿಶ್ಲೇಷಿಸಿ',
+                    analysisResultTitle: 'ವಿಶ್ಲೇಷಣೆ ಫಲಿತಾಂಶ',
+                    diseaseLabel: 'ರೋಗ:',
+                    confidenceLabel: 'ವಿಶ್ವಾಸ:',
+                    defaultAdviceText: 'ಚಿಕಿತ್ಸೆಯ ಸಲಹೆ ಪಡೆಯಲು ಚಿತ್ರವನ್ನು ಅಪ್‌ಲೋಡ್ ಮಾಡಿ.',
+                    treatmentAdviceTitle: 'ಚಿಕಿತ್ಸೆಯ ಸಲಹೆ',
+                    diseaseInfoTitle: 'ರೋಗ ಮಾಹಿತಿ',
+                    chatbotTitle: 'ಸಸ್ಯ ಆರೈಕೆ ಚಾಟ್‌ಬಾಟ್',
+                    chatbotSubtitle: 'ಸಸ್ಯ ಆರೈಕೆ, ರೋಗಗಳು ಅಥವಾ ತೋಟಗಾರಿಕೆ ಸಲಹೆಗಳ ಬಗ್ಗೆ ಪ್ರಶ್ನೆಗಳನ್ನು ಕೇಳಿ.',
+                    initialBotMessage: 'ನಮಸ್ಕಾರ! ನಾನು ನಿಮ್ಮ ಸಸ್ಯ ಆರೈಕೆ ಸಹಾಯಕ. ಇಂದು ನಾನು ನಿಮಗೆ ಹೇಗೆ ಸಹಾಯ ಮಾಡಬಹುದು?',
+                    chatPlaceholder: 'ಸಸ್ಯ ಆರೈಕೆ ಬಗ್ಗೆ ಕೇಳಿ...',
+                    sendButton: 'ಕಳುಹಿಸು',
+                    micButtonSpeak: 'ಮಾತನಾಡಿ',
+                    micButtonStop: 'ಮಾತನಾಡಲು ನಿಲ್ಲಿಸಿ',
+                    micListening: 'ಕೇಳುತ್ತಿದೆ...',
+                    micError: 'ಕೇಳುವಲ್ಲಿ ದೋಷ. ಟೈಪ್ ಮಾಡಲು ಅಥವಾ ಮೈಕ್ ಮೇಲೆ ಮತ್ತೆ ಕ್ಲಿಕ್ ಮಾಡಲು ಪ್ರಯತ್ನಿಸಿ.',
+                    alertImageRequired: 'ದಯವಿಟ್ಟು ಅಪ್‌ಲೋಡ್ ಮಾಡಲು ಚಿತ್ರವನ್ನು ಆಯ್ಕೆಮಾಡಿ',
+                    alertAnalysisError: 'ಚಿತ್ರವನ್ನು ವಿಶ್ಲೇಷಿಸುವಲ್ಲಿ ದೋಷ: ',
+                    alertFetchInfoError: 'ರೋಗದ ಮಾಹಿತಿ ಪಡೆಯುವಲ್ಲಿ ದೋಷ: ',
+                    alertChatbotError: 'ಸಂಪರ್ಕ ದೋಷ. ದಯವಿಟ್ಟು ಮತ್ತೆ ಪ್ರಯತ್ನಿಸಿ.',
+                    infoCause: 'ಕಾರಣ',
+                    infoSymptoms: 'ರೋಗಲಕ್ಷಣಗಳು',
+                    infoConditions: 'ಅಭಿವೃತ್ತಿಗೆ ಅನುಕೂಲಕರ ಪರಿಸ್ಥಿತಿಗಳು',
+                    infoManagementStrategies: 'ನಿರ್ವಹಣಾ ತಂತ್ರಗಳು',
+                    infoCulturalControl: 'ಸಾಂಸ್ಕೃತಿಕ ನಿಯಂತ್ರಣ',
+                    infoChemicalControl: 'ರಸಾಯನಿಕ ನಿಯಂತ್ರಣ',
+                    infoBiologicalControl: 'ಜೈವಿಕ ನಿಯಂತ್ರಣ',
+                    infoLongTermPrevention: 'ದೀರ್ಘಾವಧಿಯ ತಡೆಗಟ್ಟುವಿಕೆ',
+                    noTreatmentAdvice: 'ಯಾವುದೇ ಚಿಕಿತ್ಸೆಯ ಸಲಹೆ ಲಭ್ಯವಿಲ್ಲ.',
+                    listenButton: 'ಕೇಳಿ',
+                    stopButton: 'ನಿಲ್ಲಿಸು',
+                },
+                'ml-IN': {
+                    appTitle: 'സസ്യരോഗ വർഗ്ഗീകരണവും ചാറ്റ്ബോട്ടും',
+                    headerTitle: 'സസ്യരോഗ വർഗ്ഗീകരണവും ചാറ്റ്ബോട്ടും',
+                    headerSubtitle: 'രോഗങ്ങൾ തിരിച്ചറിയാനും ചികിത്സാ ഉപദേശം നേടാനും ഒരു സസ്യ ഇലയുടെ ചിത്രം അപ്‌ലോഡ് ചെയ്യുക',
+                    uploadSectionTitle: 'സസ്യ ചിത്രം അപ്‌ലോഡ് ചെയ്യുക',
+                    analyzeButton: 'രോഗം വിശകലനം ചെയ്യുക',
+                    analysisResultTitle: 'വിശകലന ഫലം',
+                    diseaseLabel: 'രോഗം:',
+                    confidenceLabel: 'ആത്മവിശ്വാസം:',
+                    defaultAdviceText: 'ചികിത്സാ ഉപദേശം ലഭിക്കുന്നതിന് ഒരു ചിത്രം അപ്‌ലോഡ് ചെയ്യുക.',
+                    treatmentAdviceTitle: 'ചികിത്സാ ഉപദേശം',
+                    diseaseInfoTitle: 'രോഗ വിവരങ്ങൾ',
+                    chatbotTitle: 'സസ്യ പരിപാലന ചാറ്റ്ബോട്ട്',
+                    chatbotSubtitle: 'സസ്യ പരിപാലനം, രോഗങ്ങൾ, അല്ലെങ്കിൽ പൂന്തോട്ട നിർമ്മാണ നുറുങ്ങുകൾ എന്നിവയെക്കുറിച്ച് ചോദ്യങ്ങൾ ചോദിക്കുക.',
+                    initialBotMessage: 'ഹലോ! ഞാൻ നിങ്ങളുടെ സസ്യ പരിപാലന സഹായിയാണ്. ഇന്ന് ഞാൻ നിങ്ങളെ എങ്ങനെ സഹായിക്കും?',
+                    chatPlaceholder: 'സസ്യ പരിപാലനത്തെക്കുറിച്ച് ചോദിക്കുക...',
+                    sendButton: 'അയയ്ക്കുക',
+                    micButtonSpeak: 'സംസാരിക്കുക',
+                    micButtonStop: 'സംസാരം നിർത്തുക',
+                    micListening: 'കേൾക്കുന്നു...',
+                    micError: 'കേൾക്കുന്നതിൽ പിശക്. ടൈപ്പ് ചെയ്യാനോ മൈക്കിൽ വീണ്ടും ക്ലിക്ക് ചെയ്യാനോ ശ്രമിക്കുക.',
+                    alertImageRequired: 'ദയവായി അപ്‌ലോഡ് ചെയ്യാൻ ഒരു ചിത്രം തിരഞ്ഞെടുക്കുക',
+                    alertAnalysisError: 'ചിത്രം വിശകലനം ചെയ്യുന്നതിൽ പിശക്: ',
+                    alertFetchInfoError: 'രോഗ വിവരങ്ങൾ ലഭ്യമാക്കുന്നതിൽ പിശക്: ',
+                    alertChatbotError: 'കണക്ഷൻ പിശക്. ദയവായി വീണ്ടും ശ്രമിക്കുക.',
+                    infoCause: 'കാരണം',
+                    infoSymptoms: 'ലക്ഷണങ്ങൾ',
+                    infoConditions: 'വികസനത്തിന് അനുകൂലമായ സാഹചര്യങ്ങൾ',
+                    infoManagementStrategies: 'പരിപാലന തന്ത്രങ്ങൾ',
+                    infoCulturalControl: 'സാംസ്കാരിക നിയന്ത്രണം',
+                    infoChemicalControl: 'രാസ നിയന്ത്രണം',
+                    infoBiologicalControl: 'ജൈവ നിയന്ത്രണം',
+                    infoLongTermPrevention: 'ദീർഘകാല പ്രതിരോധം',
+                    noTreatmentAdvice: 'ചികിത്സാ ഉപദേശം ലഭ്യമല്ല.',
+                    listenButton: 'കേൾക്കുക',
+                    stopButton: 'നിർത്തുക',
+                },
+                'pa-IN': {
+                    appTitle: 'ਪੌਦਾ ਰੋਗ ਵਰਗੀਕਰਨ ਅਤੇ ਚੈਟਬੋਟ',
+                    headerTitle: 'ਪੌਦਾ ਰੋਗ ਵਰਗੀਕਰਨ ਅਤੇ ਚੈਟਬੋਟ',
+                    headerSubtitle: 'ਰੋਗਾਂ ਦੀ ਪਛਾਣ ਕਰਨ ਅਤੇ ਇਲਾਜ ਦੀ ਸਲਾਹ ਲੈਣ ਲਈ ਪੌਦੇ ਦੇ ਪੱਤੇ ਦੀ ਤਸਵੀਰ ਅਪਲੋਡ ਕਰੋ',
+                    uploadSectionTitle: 'ਪੌਦੇ ਦੀ ਤਸਵੀਰ ਅਪਲੋਡ ਕਰੋ',
+                    analyzeButton: 'ਰੋਗ ਦਾ ਵਿਸ਼ਲੇਸ਼ਣ ਕਰੋ',
+                    analysisResultTitle: 'ਵਿਸ਼ਲੇਸ਼ਣ ਨਤੀਜਾ',
+                    diseaseLabel: 'ਰੋਗ:',
+                    confidenceLabel: 'ਭਰੋਸਾ:',
+                    defaultAdviceText: 'ਇਲਾਜ ਦੀ ਸਲਾਹ ਪ੍ਰਾਪਤ ਕਰਨ ਲਈ ਇੱਕ ਤਸਵੀਰ ਅਪਲੋਡ ਕਰੋ।',
+                    treatmentAdviceTitle: 'ਇਲਾਜ ਦੀ ਸਲਾਹ',
+                    diseaseInfoTitle: 'ਰੋਗ ਦੀ ਜਾਣਕਾਰੀ',
+                    chatbotTitle: 'ਪੌਦਾ ਦੇਖਭਾਲ ਚੈਟਬੋਟ',
+                    chatbotSubtitle: 'ਪੌਦਾ ਦੇਖਭਾਲ, ਬਿਮਾਰੀਆਂ ਜਾਂ ਬਾਗਬਾਨੀ ਸੁਝਾਵਾਂ ਬਾਰੇ ਪ੍ਰਸ਼ਨ ਪੁੱਛੋ।',
+                    initialBotMessage: 'ਸਤਿ ਸ੍ਰੀ ਅਕਾਲ! ਮੈਂ ਤੁਹਾਡਾ ਪੌਦਾ ਦੇਖਭਾਲ ਸਹਾਇਕ ਹਾਂ। ਮੈਂ ਅੱਜ ਤੁਹਾਡੀ ਕਿਵੇਂ ਮਦਦ ਕਰ ਸਕਦਾ ਹਾਂ?',
+                    chatPlaceholder: 'ਪੌਦਾ ਦੇਖਭਾਲ ਬਾਰੇ ਪੁੱਛੋ...',
+                    sendButton: 'ਭੇਜੋ',
+                    micButtonSpeak: 'ਬੋਲੋ',
+                    micButtonStop: 'ਬੋਲਣਾ ਬੰਦ ਕਰੋ',
+                    micListening: 'ਸੁਣ ਰਿਹਾ ਹੈ...',
+                    micError: 'ਸੁਣਨ ਵਿੱਚ ਗਲਤੀ। ਟਾਈਪ ਕਰਨ ਜਾਂ ਮਾਈਕ \'ਤੇ ਦੁਬਾਰਾ ਕਲਿੱਕ ਕਰਨ ਦੀ ਕੋਸ਼ਿਸ਼ ਕਰੋ।', 
+                    alertImageRequired: 'ਕਿਰਪਾ ਕਰਕੇ ਅਪਲੋਡ ਕਰਨ ਲਈ ਇੱਕ ਤਸਵੀਰ ਚੁਣੋ',
+                    alertAnalysisError: 'ਤਸਵੀਰ ਦਾ ਵਿਸ਼ਲੇਸ਼ਣ ਕਰਨ ਵਿੱਚ ਗਲਤੀ: ',
+                    alertFetchInfoError: 'ਰੋਗ ਦੀ ਜਾਣਕਾਰੀ ਪ੍ਰਾਪਤ ਕਰਨ ਵਿੱਚ ਗਲਤੀ: ',
+                    alertChatbotError: 'ਕਨੈਕਸ਼ਨ ਗਲਤੀ। ਕਿਰਪਾ ਕਰਕੇ ਦੁਬਾਰਾ ਕੋਸ਼ਿਸ਼ ਕਰੋ।',
+                    infoCause: 'ਕਾਰਨ',
+                    infoSymptoms: 'ਲੱਛਣ',
+                    infoConditions: 'ਵਿਕਾਸ ਲਈ ਅਨੁਕੂਲ ਹਾਲਾਤ',
+                    infoManagementStrategies: 'ਪ੍ਰਬੰਧਨ ਰਣਨੀਤੀਆਂ',
+                    infoCulturalControl: 'ਸੱਭਿਆਚਾਰਕ ਨਿਯੰਤਰਣ',
+                    infoChemicalControl: 'ਰਸਾਇਣਕ ਨਿਯੰਤਰਣ',
+                    infoBiologicalControl: 'ਜੈਵਿਕ ਨਿਯੰਤਰਣ',
+                    infoLongTermPrevention: 'ਲੰਬੇ ਸਮੇਂ ਦੀ ਰੋਕਥਾਮ',
+                    noTreatmentAdvice: 'ਕੋਈ ਇਲਾਜ ਦੀ ਸਲਾਹ ਉਪਲਬਧ ਨਹੀਂ ਹੈ।',
+                    listenButton: 'ਸੁਣੋ',
+                    stopButton: 'ਰੋਕੋ',
+                },
+            };
+
+            // --- UI Translation Logic ---
+            function applyTranslations() {
+                const currentLangData = translations[currentLanguage];
+                if (!currentLangData) {
+                    console.warn(`No translations found for language: ${currentLanguage}`);
+                    return;
+                }
+
+                // Translate elements with data-i18n attribute (text content)
+                document.querySelectorAll('[data-i18n]').forEach(element => {
+                    const key = element.getAttribute('data-i18n');
+                    if (currentLangData[key]) {
+                        element.textContent = currentLangData[key];
+                    }
+                });
+
+                // Translate placeholders
+                document.querySelectorAll('[data-i18n-placeholder]').forEach(element => {
+                    const key = element.getAttribute('data-i18n-placeholder');
+                    if (currentLangData[key]) {
+                        element.placeholder = currentLangData[key];
+                    }
+                });
+
+                // Update specific button titles/text
+                if (micButton) {
+                    micButton.title = currentLangData.micButtonSpeak;
+                }
+                if (sendButton) {
+                    sendButton.title = currentLangData.sendButton;
+                }
+                if (speakTreatmentAdviceButton) {
+                    speakTreatmentAdviceButton.title = currentLangData.listenButton;
+                }
+                if (stopTreatmentAdviceButton) {
+                    stopTreatmentAdviceButton.title = currentLangData.stopButton;
+                }
+
+                document.querySelectorAll('.listen-message-btn').forEach(button => {
+                    button.title = currentLangData.listenButton;
+                });
+                document.querySelectorAll('.listen-message-stop-btn').forEach(button => {
+                    button.title = currentLangData.stopButton;
+                });
+                document.querySelectorAll('.listen-accordion-btn').forEach(button => {
+                    button.title = currentLangData.listenButton;
+                });
+                document.querySelectorAll('.stop-accordion-btn').forEach(button => {
+                    button.title = currentLangData.stopButton;
+                });
+                document.querySelectorAll('.listen-sub-section-btn').forEach(button => {
+                    button.title = currentLangData.listenButton;
+                });
+                document.querySelectorAll('.stop-sub-section-btn').forEach(button => {
+                    button.title = currentLangData.stopButton;
+                });
+            }
+
+            // Initial translation on load
+            applyTranslations();
+
+            // Language change listener
+            languageSelect.addEventListener('change', () => {
+                currentLanguage = languageSelect.value;
+                applyTranslations();
+                console.log(`Language set to: ${currentLanguage}`);
+
+                // Re-fetch disease info if a disease is currently displayed, to get it in the new language
+                if (currentDisease) {
+                    fetchDiseaseInfo(currentDisease);
+                }
+
+                // Re-run prediction for last uploaded image to update disease name in new language
+                if (lastUploadedFile) {
+                    // Simulate a submit of the upload form to get the disease name in the new language
+                    const formData = new FormData();
+                    formData.append('image', lastUploadedFile);
+                    formData.append('target_language', currentLanguage);
+
+                    uploadLoader.style.display = 'block';
+                    resultBox.style.display = 'none';
+                    treatmentAdviceDiv.style.display = 'none';
+                    diseaseInformationDiv.style.display = 'none';
+                    diseaseInfoContainer.innerHTML = '';
+
+                    fetch(`${FLASK_API_URL}/predict`, {
+                        method: 'POST',
+                        body: formData
+                    })
+                    .then(response => response.json())
+                    .then(result => {
+                        if (result.error) {
+                            throw new Error(result.error);
+                        }
+                        diseaseNameSpan.textContent = result.disease_display || result.disease;
+                        confidenceScoreSpan.textContent = result.confidence.toFixed(1);
+
+                        if (result.treatment_advice) {
+                            adviceText.textContent = result.treatment_advice;
+                            treatmentAdviceDiv.style.display = 'block';
+                        } else {
+                            adviceText.textContent = translations[currentLanguage].noTreatmentAdvice;
+                            treatmentAdviceDiv.style.display = 'block';
+                        }
+
+                        currentDisease = result.disease;
+                        fetchDiseaseInfo(currentDisease);
+                        resultBox.style.display = 'block';
+                    })
+                    .catch(error => {
+                        alert(translations[currentLanguage].alertAnalysisError + error.message);
+                    })
+                    .finally(() => {
+                        uploadLoader.style.display = 'none';
+                    });
+                }
+
+                // Clear chat and reset initial message in the new language
+                chatMessages.innerHTML = '';
+                const initialMessageDiv = document.createElement('div');
+                initialMessageDiv.classList.add('message', 'bot-message');
+                initialMessageDiv.innerHTML = `<span data-i18n="initialBotMessage">${translations[currentLanguage]['initialBotMessage']}</span>
+                    <button class="btn-icon-custom bg-gray-200 text-gray-700 hover:bg-gray-300 listen-message-btn speak-button" data-message-key="initialBotMessage" title="${translations[currentLanguage]['listenButton']}">
+                        <i class="fas fa-volume-up"></i>
+                    </button>
+                    <button class="btn-icon-custom stop-button listen-message-stop-btn" title="${translations[currentLanguage]['stopButton']}">
+                        <i class="fas fa-stop"></i>
+                    </button>`;
+                chatMessages.appendChild(initialMessageDiv);
+                chatMessages.scrollTop = chatMessages.scrollHeight;
+            });
+
+            // --- Image Upload and Analysis Logic ---
+            imageUpload.addEventListener('change', function() {
+                const file = this.files[0];
+                if (file) {
+                    const reader = new FileReader();
+                    reader.onload = function(e) {
+                        previewImage.src = e.target.result;
+                        previewImage.classList.remove('hidden');
+                        resultBox.style.display = 'none'; // Hide previous results
+                        treatmentAdviceDiv.style.display = 'none';
+                        diseaseInformationDiv.style.display = 'none';
+                        diseaseInfoContainer.innerHTML = ''; // Clear previous disease info
+                    }
+                    reader.readAsDataURL(file);
+                }
+            });
+
+            uploadForm.addEventListener('submit', async function(e) {
+                e.preventDefault();
+                const file = imageUpload.files[0];
+                if (!file) {
+                    alert(translations[currentLanguage].alertImageRequired);
+                    return;
+                }
+
+                uploadLoader.style.display = 'block';
+                resultBox.style.display = 'none';
+                treatmentAdviceDiv.style.display = 'none';
+                diseaseInformationDiv.style.display = 'none';
+                diseaseInfoContainer.innerHTML = '';
+
+                const formData = new FormData();
+                formData.append('image', file);
+                formData.append('target_language', currentLanguage); // Send target language for advice
+
+                try {
+                    const response = await fetch(`${FLASK_API_URL}/predict`, {
+                        method: 'POST',
+                        body: formData
+                    });
+
+                    const result = await response.json();
+                    if (result.error) {
+                        throw new Error(result.error);
+                    }
+
+                    diseaseNameSpan.textContent = result.disease_display || result.disease;
+                    confidenceScoreSpan.textContent = result.confidence.toFixed(1);
+
+                    if (result.treatment_advice) {
+                        adviceText.textContent = result.treatment_advice; // This is already translated by backend
+                        treatmentAdviceDiv.style.display = 'block';
+                    } else {
+                        adviceText.textContent = translations[currentLanguage].noTreatmentAdvice;
+                        treatmentAdviceDiv.style.display = 'block';
+                    }
+
+                    currentDisease = result.disease; // Store original English disease name for info/chatbot context
+                    fetchDiseaseInfo(currentDisease); // Fetch detailed info in selected language
+
+                    resultBox.style.display = 'block';
+                } catch (error) {
+                    alert(translations[currentLanguage].alertAnalysisError + error.message);
+                } finally {
+                    uploadLoader.style.display = 'none';
+                }
+            });
+
+            async function fetchDiseaseInfo(disease) {
+                if (!disease) return;
+
+                const disease_name = disease;
+                const language = currentLanguage;
+
+                try {
+                    const response = await fetch(`${FLASK_API_URL}/disease_info`, {
+                        method: 'POST',
+                        body: JSON.stringify({ 
+                            disease: disease_name, 
+                            target_language: language 
+                        }),
+                        headers: { 'Content-Type': 'application/json' }
+                    });
+                    if (!response.ok) {
+                        throw new Error('Server error: ' + response.status);
+                    }
+                    const data = await response.json();
+                    if (data.error) {
+                        throw new Error(data.error);
+                    }
+
+                    const info = data.information; // This info is already translated by backend
+                    diseaseInfoContainer.innerHTML = ''; // Clear previous info
+                    diseaseInformationDiv.style.display = 'block';
+
+                    function createAccordionSection(titleKey, iconClass, contentHtml) {
+                        const section = document.createElement('div');
+                        section.classList.add('accordion-section');
+
+                        const toggleButton = document.createElement('button');
+                        toggleButton.classList.add('accordion-toggle');
+                        toggleButton.innerHTML = `<i class="${iconClass}"></i> <span data-i18n="${titleKey}">${translations[currentLanguage][titleKey]}</span>`;
+                        section.appendChild(toggleButton);
+
+                        const contentDiv = document.createElement('div');
+                        contentDiv.classList.add('accordion-content');
+                        contentDiv.innerHTML = contentHtml;
+                        section.appendChild(contentDiv);
+
+                        // Add listen button for the entire accordion section content
+                        const listenButton = document.createElement('button');
+                        listenButton.classList.add('btn-icon-custom', 'bg-gray-200', 'text-gray-700', 'hover:bg-gray-300', 'ml-auto', 'listen-accordion-btn', 'speak-button');
+                        listenButton.innerHTML = '<i class="fas fa-volume-up"></i>';
+                        listenButton.title = translations[currentLanguage].listenButton;
+                        // Store the full text content of the section for speaking
+                        listenButton.setAttribute('data-content', contentHtml); 
+                        toggleButton.appendChild(listenButton);
+
+                        // Add stop button for the entire accordion section content
+                        const stopButton = document.createElement('button');
+                        stopButton.classList.add('btn-icon-custom', 'stop-button', 'stop-accordion-btn');
+                        stopButton.innerHTML = '<i class="fas fa-stop"></i>';
+                        stopButton.title = translations[currentLanguage].stopButton;
+                        toggleButton.appendChild(stopButton);
+
+                        return section;
+                    }
+
+                    // Populate the accordion sections with translated content
+                    if (info.cause) {
+                        diseaseInfoContainer.appendChild(createAccordionSection('infoCause', 'fas fa-exclamation-triangle', `<p>${info.cause}</p>`));
+                    }
+
+                    if (info.symptoms && info.symptoms.length > 0) {
+                        const ul = document.createElement('ul');
+                        info.symptoms.forEach(symptom => {
+                            const li = document.createElement('li');
+                            li.textContent = symptom;
+                            ul.appendChild(li);
+                        });
+                        diseaseInfoContainer.appendChild(createAccordionSection('infoSymptoms', 'fas fa-list-ul', ul.outerHTML));
+                    }
+
+                    if (info.conditions && info.conditions.length > 0) {
+                        const ul = document.createElement('ul');
+                        info.conditions.forEach(condition => {
+                            const li = document.createElement('li');
+                            li.textContent = condition;
+                            ul.appendChild(li);
+                        });
+                        diseaseInfoContainer.appendChild(createAccordionSection('infoConditions', 'fas fa-thermometer-half', ul.outerHTML));
+                    }
+
+                    const managementContent = `
+                        <div class="sub-section">
+                            <h5 class="flex items-center gap-2"><span data-i18n="infoCulturalControl">${translations[currentLanguage]['infoCulturalControl']}</span>
+                                <button class="btn-icon-custom bg-gray-200 text-gray-700 hover:bg-gray-300 ml-auto listen-sub-section-btn speak-button" data-content="${info.cultural_control ? info.cultural_control.join('. ') : ''}" title="${translations[currentLanguage]['listenButton']}">
+                                    <i class="fas fa-volume-up"></i>
+                                </button>
+                                <button class="btn-icon-custom stop-button stop-sub-section-btn" data-content="${info.cultural_control ? info.cultural_control.join('. ') : ''}" title="${translations[currentLanguage]['stopButton']}">
+                                    <i class="fas fa-stop"></i>
+                                </button>
+                            </h5>
+                            <ul>${info.cultural_control ? info.cultural_control.map(item => `<li>${item}</li>`).join('') : ''}</ul>
+                        </div>
+                        <div class="sub-section">
+                            <h5 class="flex items-center gap-2"><span data-i18n="infoChemicalControl">${translations[currentLanguage]['infoChemicalControl']}</span>
+                                <button class="btn-icon-custom bg-gray-200 text-gray-700 hover:bg-gray-300 ml-auto listen-sub-section-btn speak-button" data-content="${info.chemical_control ? info.chemical_control.join('. ') : ''}" title="${translations[currentLanguage]['listenButton']}">
+                                    <i class="fas fa-volume-up"></i>
+                                </button>
+                                <button class="btn-icon-custom stop-button stop-sub-section-btn" data-content="${info.chemical_control ? info.chemical_control.join('. ') : ''}" title="${translations[currentLanguage]['stopButton']}">
+                                    <i class="fas fa-stop"></i>
+                                </button>
+                            </h5>
+                            <ul>${info.chemical_control ? info.chemical_control.map(item => `<li>${item}</li>`).join('') : ''}</ul>
+                        </div>
+                        <div class="sub-section">
+                            <h5 class="flex items-center gap-2"><span data-i18n="infoBiologicalControl">${translations[currentLanguage]['infoBiologicalControl']}</span>
+                                <button class="btn-icon-custom bg-gray-200 text-gray-700 hover:bg-gray-300 ml-auto listen-sub-section-btn speak-button" data-content="${info.biological_control ? info.biological_control.join('. ') : ''}" title="${translations[currentLanguage]['listenButton']}">
+                                    <i class="fas fa-volume-up"></i>
+                                </button>
+                                <button class="btn-icon-custom stop-button stop-sub-section-btn" data-content="${info.biological_control ? info.biological_control.join('. ') : ''}" title="${translations[currentLanguage]['stopButton']}">
+                                    <i class="fas fa-stop"></i>
+                                </button>
+                            </h5>
+                            <ul>${info.biological_control ? info.biological_control.map(item => `<li>${item}</li>`).join('') : ''}</ul>
+                        </div>
+                    `;
+                    diseaseInfoContainer.appendChild(createAccordionSection('infoManagementStrategies', 'fas fa-leaf', managementContent));
+
+                    if (info.prevention && info.prevention.length > 0) {
+                        const ul = document.createElement('ul');
+                        info.prevention.forEach(item => {
+                            const li = document.createElement('li');
+                            li.textContent = item;
+                            ul.appendChild(li);
+                        });
+                        diseaseInfoContainer.appendChild(createAccordionSection('infoLongTermPrevention', 'fas fa-shield-alt', ul.outerHTML));
+                    }
+
+                    // Add event listeners for toggling and listening
+                    const accordionToggles = document.querySelectorAll('.accordion-toggle');
+                    accordionToggles.forEach(toggle => {
+                        toggle.addEventListener('click', function(event) {
+    if (
+        event.target.closest('.speak-button') ||
+        event.target.closest('.stop-button')
+    ) {
+        return; // Don't toggle if a speak/stop button was clicked
+    }
+    const content = event.currentTarget.nextElementSibling;
+    content.classList.toggle('active');
+});
+                    });
+
+                    // Listen buttons for accordion sections (entire content)
+                    document.querySelectorAll('.listen-accordion-btn').forEach(button => {
+                        button.addEventListener('click', async (event) => {
+                            event.stopPropagation(); // Prevent accordion from toggling
+                            const contentHtml = button.getAttribute('data-content');
+                            // Create a temporary div to extract text content from HTML
+                            const tempDiv = document.createElement('div');
+                            tempDiv.innerHTML = contentHtml;
+                            let textToSpeak = tempDiv.textContent.trim(); // Get plain text
+
+                            // Sanitize text: remove common Markdown symbols and extra spaces
+                            textToSpeak = textToSpeak.replace(/[\*#\-_`~+=\\\[\]\(\)]/g, ''); // Remove *, #, -, _, `, ~, +, =, [, ], (, )
+                            textToSpeak = textToSpeak.replace(/\s+/g, ' ').trim(); // Replace multiple spaces with single space
+
+                            if (textToSpeak) {
+                                // Pass the specific speak button and its corresponding stop button
+                                const stopBtn = button.nextElementSibling; // Assuming stop button is next sibling
+                                await speakText(textToSpeak, currentLanguage, button, stopBtn);
+                            }
+                        });
+                    });
+                     // Stop buttons for accordion sections
+                    document.querySelectorAll('.stop-accordion-btn').forEach(button => {
+                        button.addEventListener('click', (event) => {
+                            event.stopPropagation(); // Prevent accordion from toggling
+                            stopSpeaking(button.previousElementSibling, button); // Pass speak button and stop button
+                        });
+                    });
+
+                    // Listen buttons for sub-sections within management
+                    document.querySelectorAll('.listen-sub-section-btn').forEach(button => {
+                        button.addEventListener('click', async (event) => {
+                            event.stopPropagation(); // Prevent accordion from toggling
+                            let contentText = button.getAttribute('data-content');
+                            // Sanitize text: remove common Markdown symbols and extra spaces
+                            contentText = contentText.replace(/[\*#\-_`~+=\\\[\]\(\)]/g, ''); // Remove *, #, -, _, `, ~, +, =, [, ], (, )
+                            contentText = contentText.replace(/\s+/g, ' ').trim(); // Replace multiple spaces with single space
+
+                            if (contentText) {
+                                const stopBtn = button.nextElementSibling; // Assuming stop button is next sibling
+                                await speakText(contentText, currentLanguage, button, stopBtn);
+                            }
+                        });
+                    });
+                     // Stop buttons for sub-sections within management
+                    document.querySelectorAll('.stop-sub-section-btn').forEach(button => {
+                        button.addEventListener('click', (event) => {
+                            event.stopPropagation(); // Prevent accordion from toggling
+                            stopSpeaking(button.previousElementSibling, button); // Pass speak button and stop button
+                        });
+                    });
+
+                } catch (error) {
+                    alert(translations[currentLanguage].alertFetchInfoError + error.message);
+                    diseaseInformationDiv.style.display = 'none';
+                }
+            }
+
+            // --- Chatbot Functionality ---
+            sendButton.addEventListener('click', sendMessage);
+            chatInput.addEventListener('keypress', function(e) {
+                if (e.key === 'Enter') {
+                    e.preventDefault();
+                    sendMessage();
+                }
+            });
+
+            async function sendMessage() {
+                const message = chatInput.value.trim();
+                if (!message) return;
+
+                addMessage(message, 'user');
+                chatInput.value = '';
+
+                chatLoader.style.display = 'block';
+
+                try {
+                    const response = await fetch(`${FLASK_API_URL}/chatbot`, {
+                        method: 'POST',
+                        headers: { 'Content-Type': 'application/json' },
+                        body: JSON.stringify({
+                            query: message,
+                            disease: currentDisease, // Send English disease name for context
+                            source_language: currentLanguage // Tell backend the source language of the query
+                        })
+                    });
+
+                    if (!response.ok) {
+                        throw new Error(`Server Error: ${response.status}`);
+                    }
+                    const data = await response.json();
+                    
+                    chatLoader.style.display = 'none';
+                    if (data.error) {
+                        addMessage(translations[currentLanguage].alertChatbotError + data.error, 'bot');
+                    } else {
+                        addMessage(data.response, 'bot'); // Response is already translated
+                    }
+                } catch (error) {
+                    chatLoader.style.display = 'none';
+                    addMessage(translations[currentLanguage].alertChatbotError, 'bot');
+                    console.error('Chatbot Error:', error);
+                }
+            }
+
+            function addMessage(text, sender) {
+                const messageDiv = document.createElement('div');
+                messageDiv.classList.add('message', `${sender}-message`);
+                
+                const textSpan = document.createElement('span');
+                textSpan.textContent = text;
+                messageDiv.appendChild(textSpan);
+
+                // Add listen button for bot messages
+                if (sender === 'bot') {
+                    const listenButton = document.createElement('button');
+                    listenButton.classList.add('btn-icon-custom', 'bg-gray-200', 'text-gray-700', 'hover:bg-gray-300', 'listen-message-btn', 'speak-button');
+                    listenButton.innerHTML = '<i class="fas fa-volume-up"></i>';
+                    listenButton.title = translations[currentLanguage].listenButton;
+                    listenButton.setAttribute('data-message', text); // Store message to be spoken
+                    messageDiv.appendChild(listenButton);
+
+                    const stopButton = document.createElement('button');
+                    stopButton.classList.add('btn-icon-custom', 'stop-button', 'listen-message-stop-btn');
+                    stopButton.innerHTML = '<i class="fas fa-stop"></i>';
+                    stopButton.title = translations[currentLanguage].stopButton;
+                    messageDiv.appendChild(stopButton);
+
+                    listenButton.addEventListener('click', async (event) => {
+                        let messageToSpeak = event.currentTarget.getAttribute('data-message');
+                        // Sanitize text: remove common Markdown symbols and extra spaces
+                        messageToSpeak = messageToSpeak.replace(/[\*#\-_`~+=\\\[\]\(\)]/g, ''); // Remove *, #, -, _, `, ~, +, =, [, ], (, )
+                        messageToSpeak = messageToSpeak.replace(/\s+/g, ' ').trim(); // Replace multiple spaces with single space
+
+                        await speakText(messageToSpeak, currentLanguage, listenButton, stopButton);
+                    });
+
+                    stopButton.addEventListener('click', () => {
+                        stopSpeaking(listenButton, stopButton);
+                    });
+                }
+                
+                chatMessages.appendChild(messageDiv);
+                chatMessages.scrollTop = chatMessages.scrollHeight;
+            }
+
+            // --- Google Cloud Speech-to-Text (Mic Input) via Backend ---
+            let mediaRecorder;
+            let audioChunks = [];
+
+            micButton.addEventListener('click', async () => {
+                if (mediaRecorder && mediaRecorder.state === 'recording') {
+                    mediaRecorder.stop();
+                    micButton.classList.remove('recording');
+                    micButton.innerHTML = `<i class="fas fa-microphone"></i>`;
+                    micButton.title = translations[currentLanguage].micButtonSpeak;
+                    chatInput.placeholder = translations[currentLanguage].chatPlaceholder;
+                } else {
+                    try {
+                        const stream = await navigator.mediaDevices.getUserMedia({ audio: true });
+                        mediaRecorder = new MediaRecorder(stream);
+                        audioChunks = [];
+
+                        mediaRecorder.ondataavailable = event => {
+                            audioChunks.push(event.data);
+                        };
+
+                        mediaRecorder.onstop = async () => {
+                            const audioBlob = new Blob(audioChunks, { type: 'audio/webm' }); // Use webm for broader browser support
+                            await sendAudioForSTT(audioBlob);
+                            stream.getTracks().forEach(track => track.stop()); // Stop microphone
+                        };
+
+                        mediaRecorder.start();
+                        micButton.classList.add('recording');
+                        micButton.innerHTML = `<i class="fas fa-microphone-slash"></i>`;
+                        micButton.title = translations[currentLanguage].micButtonStop;
+                        chatInput.placeholder = translations[currentLanguage].micListening;
+                    } catch (err) {
+                        console.error('Error accessing microphone:', err);
+                        alert('Could not access microphone. Please ensure it is connected and permissions are granted.');
+                        micButton.classList.remove('recording');
+                        micButton.innerHTML = `<i class="fas fa-microphone"></i>`;
+                        micButton.title = translations[currentLanguage].micButtonSpeak;
+                        chatInput.placeholder = translations[currentLanguage].chatPlaceholder;
+                    }
+                }
+            });
+
+            async function sendAudioForSTT(audioBlob) {
+                chatLoader.style.display = 'block';
+                try {
+                    const formData = new FormData();
+                    formData.append('audio', audioBlob, 'audio.webm'); // Filename and type
+                    formData.append('language_code', currentLanguage); // Send full language code
+
+                    const response = await fetch(`${FLASK_API_URL}/stt_process`, {
+                        method: 'POST',
+                        body: formData
+                    });
+
+                    const data = await response.json();
+                    if (data.error) {
+                        throw new Error(data.error);
+                    }
+                    chatInput.value = data.transcript;
+                    sendMessage(); // Automatically send the transcribed message
+                } catch (error) {
+                    console.error('STT Error:', error);
+                    alert(translations[currentLanguage].micError);
+                } finally {
+                    chatLoader.style.display = 'none';
+                }
+            }
+
+            // --- Google Cloud Text-to-Speech (Speaker Output) via Backend ---
+            // Function to stop currently playing audio
+            function stopSpeaking() {
+    if (currentAudio) {
+        currentAudio.pause();
+        currentAudio.currentTime = 0;
+        currentAudio.onended = null; // Remove event listener
+        currentAudio = null;
+    }
+    isSpeaking = false;
+    // Reset all speak/stop buttons
+    document.querySelectorAll('.speak-button').forEach(btn => {
+        btn.innerHTML = '<i class="fas fa-volume-up"></i>';
+        btn.title = translations[currentLanguage].listenButton;
+    });
+    document.querySelectorAll('.stop-button').forEach(btn => {
+        btn.style.display = 'none';
+    });
+    currentSpeakingButton = null;
+}
+
+            // Main function to speak text
+            async function speakText(text, lang_code_full = 'en-US', speakBtn = null, stopBtn = null) {
+                // Prevent overlapping calls
+                if (isSpeaking) {
+                    stopSpeaking();
+                }
+                isSpeaking = true;
+
+                stopSpeaking();
+
+                currentSpeakingButton = speakBtn || speakTreatmentAdviceButton;
+                const associatedStopButton = stopBtn || stopTreatmentAdviceButton;
+
+                currentSpeakingButton.title = "Speaking...";
+                currentSpeakingButton.innerHTML = '<i class="fas fa-volume-up animate-pulse"></i>';
+                if (associatedStopButton) {
+                    associatedStopButton.style.display = 'inline-flex';
+                }
+
+                try {
+                    const response = await fetch(`${FLASK_API_URL}/tts_process`, {
+                        method: 'POST',
+                        headers: { 'Content-Type': 'application/json' },
+                        body: JSON.stringify({ text: text, language_code: lang_code_full })
+                    });
+
+                    const data = await response.json();
+                    if (data.error) {
+                        throw new Error(data.error);
+                    }
+
+                    const audio = new Audio(`data:audio/mpeg;base64,${data.audio_content}`);
+                    currentAudio = audio;
+
+                    audio.onended = () => {
+            stopSpeaking();
+        };
+
+                    // Prevent double play if user spams the button
+                    await audio.play().catch(err => {
+                        alert('Audio playback failed: ' + err.message);
+                        stopSpeaking();
+                    });
+
+                } catch (error) {
+                    console.error('TTS Error:', error);
+                    alert('Error playing audio. Please try again.');
+                    stopSpeaking();
+                } finally {
+                    isSpeaking = false;
+                }
+            }
+
+            // Listen button for treatment advice
+            speakTreatmentAdviceButton.addEventListener('click', async () => {
+                let textToSpeak = adviceText.textContent;
+                if (textToSpeak && textToSpeak !== translations[currentLanguage].defaultAdviceText) {
+                    // Sanitize text: remove common Markdown symbols and extra spaces
+                    textToSpeak = textToSpeak.replace(/[\*#\-_`~+=\\\[\]\(\)]/g, ''); // Remove *, #, -, _, `, ~, +, =, [, ], (, )
+                    textToSpeak = textToSpeak.replace(/\s+/g, ' ').trim(); // Replace multiple spaces with single space
+                    await speakText(textToSpeak, currentLanguage, speakTreatmentAdviceButton, stopTreatmentAdviceButton);
+                }
+            });
+
+            // Stop button for treatment advice
+            stopTreatmentAdviceButton.addEventListener('click', () => {
+                stopSpeaking(speakTreatmentAdviceButton, stopTreatmentAdviceButton);
+            });
+
+            // Listen buttons for chatbot messages (delegation for dynamically added buttons)
+            chatMessages.addEventListener('click', async (event) => {
+                const button = event.target.closest('.listen-message-btn');
+                if (button) {
+                    const messageKey = button.getAttribute('data-message-key');
+                    let messageToSpeak;
+                    if (messageKey) {
+                        messageToSpeak = translations[currentLanguage][messageKey];
+                    } else {
+                        messageToSpeak = button.getAttribute('data-message');
+                    }
+                    // Sanitize text: remove common Markdown symbols and extra spaces
+                    messageToSpeak = messageToSpeak.replace(/[\*#\-_`~+=\\\[\]\(\)]/g, ''); // Remove *, #, -, _, `, ~, +, =, [, ], (, )
+                    messageToSpeak = messageToSpeak.replace(/\s+/g, ' ').trim(); // Replace multiple spaces with single space
+
+                    const stopBtn = button.nextElementSibling; // Assuming stop button is next sibling
+                    await speakText(messageToSpeak, currentLanguage, button, stopBtn);
+                }
+            });
+
+            // Stop buttons for chatbot messages (delegation for dynamically added buttons)
+            chatMessages.addEventListener('click', (event) => {
+                const button = event.target.closest('.listen-message-stop-btn');
+                if (button) {
+                    const speakBtn = button.previousElementSibling; // Assuming speak button is previous sibling
+
+                    stopSpeaking(speakBtn, button);
+                }
+            });
+
+            // Check for MediaRecorder support
+            if (!window.MediaRecorder) {
+    alert('Sorry, your browser does not support audio recording.');
+    return;
+}
+        });
+    </script>
+</body>
+</html>
