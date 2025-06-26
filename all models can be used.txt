@@ -1,0 +1,7 @@
+# Choose your preferred Gemini model here
+PREFERRED_GEMINI_MODEL = 'models/gemini-1.5-pro-latest'  # Current model
+# Experiment with these:
+# PREFERRED_GEMINI_MODEL = 'models/gemini-2.5-pro-exp-03-25'
+# PREFERRED_GEMINI_MODEL = 'models/gemini-2.0-flash-001'
+# PREFERRED_GEMINI_MODEL = 'models/gemini-2.0-pro-exp'
+api key===AIzaSyD5x6QSdvJdAsIHrLOlrpds8snlIOYitvg
